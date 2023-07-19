@@ -2,6 +2,7 @@ import json
 import xapian
 
 from feisar.field import Field
+from feisar.search import SearchQuery
 
 
 class Session:
@@ -9,6 +10,9 @@ class Session:
         self._engine = engine
         self._termgenerator = xapian.TermGenerator()
         self._termgenerator.set_stemmer(xapian.Stem(language))
+        self._queryparser = xapian.QueryParser()
+        self._queryparser.set_stemmer(xapian.Stem(language))
+        self._queryparser.set_stemming_strategy(self._queryparser.STEM_SOME)
 
     def add(self, entity):
         doc = xapian.Document()
@@ -33,3 +37,6 @@ class Session:
         identifier = getattr(entity, primary_key_name)
         idterm = f"Q{identifier}"
         self._engine._db.replace_document(idterm, doc)
+
+    def exec(self, sq: SearchQuery):
+        return []
