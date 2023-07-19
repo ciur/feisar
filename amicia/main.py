@@ -15,34 +15,6 @@ app = typer.Typer()
 engine = create_engine("xapian://dbx")
 
 
-def older_index_impl(dbpath: str, folder: str):
-    db = xapian.WritableDatabase(dbpath, xapian.DB_CREATE_OR_OPEN)
-
-    termgen = xapian.TermGenerator()
-    termgen.set_stemmer(xapian.Stem('en'))
-
-    doc_id = 0
-    for path in python_files_iter(folder):
-        doc_id += 1
-        with open(path, 'r') as f:
-            text = f.read()
-        doc = xapian.Document()
-
-        termgen.set_document(doc)
-        termgen.index_text(text, 1, 'XD')  # text
-        termgen.index_text(str(path), 1, 'S')  # path
-
-        termgen.index_text(text)
-        termgen.increase_termpos()
-        termgen.index_text(str(path))
-
-        # Store all the fields for display purposes.
-        doc.set_data(json.dumps({'path': str(path)}))
-
-        id_term = f'doc_id_{doc_id}'
-        doc.add_boolean_term(id_term)
-        db.replace_document(id_term, doc)
-
 def older_search_impl(
     dbpath: str,
     querystring: str,
