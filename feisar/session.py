@@ -1,7 +1,7 @@
 import json
 import xapian
 
-from amicia.field import Field
+from feisar.field import Field
 
 
 class Session:

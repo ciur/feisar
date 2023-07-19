@@ -5,9 +5,9 @@ import json
 import typer
 import xapian
 
-from amicia.engine import create_engine
-from amicia.session import Session
-from amicia.schema import CodeFile
+from feisar.engine import create_engine
+from feisar.session import Session
+from feisar.schema import CodeFile
 
 app = typer.Typer()
 

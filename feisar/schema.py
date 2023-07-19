@@ -1,5 +1,5 @@
-from amicia.field import Field
-from amicia.index import SearchIndex
+from feisar.field import Field
+from feisar.index import SearchIndex
 
 
 class CodeFile(SearchIndex):

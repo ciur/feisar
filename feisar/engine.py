@@ -1,5 +1,5 @@
 import xapian
-from amicia.utils import get_db_path
+from feisar.utils import get_db_path
 
 
 class Engine:
