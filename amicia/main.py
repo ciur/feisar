@@ -1,23 +1,21 @@
 from pathlib import Path
+from typing import Optional
 import os
 import json
-
 import typer
 import xapian
+
+from amicia.engine import create_engine
+from amicia.session import Session
+from amicia.schema import CodeFile
 
 app = typer.Typer()
 
 
-def python_files_iter(folder: str):
-    for root, dirs, files in os.walk(folder):
-        filtered_files = [file for file in files if file.endswith('py')]
-        if len(filtered_files):
-            for file in files:
-                yield Path(root) / Path(file)
+engine = create_engine("xapian://dbx")
 
 
-@app.command()
-def index(folder: str, dbpath: str):
+def older_index_impl(dbpath: str, folder: str):
     db = xapian.WritableDatabase(dbpath, xapian.DB_CREATE_OR_OPEN)
 
     termgen = xapian.TermGenerator()
@@ -45,9 +43,12 @@ def index(folder: str, dbpath: str):
         doc.add_boolean_term(id_term)
         db.replace_document(id_term, doc)
 
-
-@app.command()
-def search(dbpath: str, querystring: str, offset:int = 0, pagesize:int = 10):
+def older_search_impl(
+    dbpath: str,
+    querystring: str,
+    offset: int = 0,
+    pagesize: int = 10
+):
     # offset - defines starting point within result set
     # pagesize - defines number of records to retrieve
 
@@ -78,3 +79,32 @@ def search(dbpath: str, querystring: str, offset:int = 0, pagesize:int = 10):
             'title': fields.get('path', ''),
             })
 
+
+def python_files_iter(folder: str):
+    for root, dirs, files in os.walk(folder):
+        filtered_files = [file for file in files if file.endswith('py')]
+        if len(filtered_files):
+            for file in files:
+                yield Path(root) / Path(file)
+
+
+@app.command()
+def index(folder: str, dbpath: str):
+    session = Session(engine)
+    doc_id = 0
+
+    for path in python_files_iter(folder):
+        with open(path, 'r') as f:
+            text = f.read()
+
+        doc_id += 1
+        code_file = CodeFile(id=doc_id, text=text, path=str(path))
+        session.add(code_file)
+
+
+@app.command()
+def search(dbpath: str, querystring: str, offset:int = 0, pagesize:int = 10):
+    pass
+    #session = Session(engine)
+    #sq = SearchQuery(CodeFile).where(path="xyz", text="abc")
+    #session.search(sq)
