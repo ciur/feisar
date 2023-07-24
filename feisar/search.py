@@ -7,4 +7,3 @@ class Search:
 
     def query(self, *args, **kwargs) -> SearchQuery:
         return SearchQuery(self._entity, *args, **kwargs)
-

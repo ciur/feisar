@@ -22,7 +22,15 @@ class Session:
 
         for name, field in entity.model_fields.items():
             if field.annotation == str:
-                self._termgenerator.index_text(name, 1, name)
+                value = getattr(entity, name)
+                self._termgenerator.index_text(
+                    value,
+                    1,
+                    name # the prefix
+                )
+                # index field without prefix for general search
+                self._termgenerator.index_text(value)
+                self._termgenerator.increase_termpos()
 
             if isinstance(field.default, Field) and field.default.primary_key:
                 primary_key_name = name
@@ -39,4 +47,16 @@ class Session:
         self._engine._db.replace_document(idterm, doc)
 
     def exec(self, sq: SearchQuery):
-        return []
+        results = []
+        for name, field in sq._entity.model_fields.items():
+            self._queryparser.add_prefix(name, name)
+
+        query = self._queryparser.parse_query(sq._query)
+        enquire = xapian.Enquire(self._engine._db)
+        enquire.set_query(query)
+
+        for match in enquire.get_mset(0, 10):
+            fields = json.loads(match.document.get_data().decode('utf8'))
+            results.append(sq._entity(**fields))
+
+        return results
